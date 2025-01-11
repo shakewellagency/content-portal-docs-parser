@@ -19,7 +19,7 @@ use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\PackageInit
 use Throwable;
 use Illuminate\Support\Facades\Cache;
 use Shakewellagency\ContentPortalDocsParser\Features\Packages\Actions\ConvertDocstoPdfAction;
-use Shakewellagency\ContentPortalPdfParser\Features\Packages\Jobs\InitialPageParserJob;
+use Shakewellagency\ContentPortalDocsParser\Features\Packages\Jobs\InitialPageParserJob;
 
 class BatchParserJob implements ShouldQueue
 {
