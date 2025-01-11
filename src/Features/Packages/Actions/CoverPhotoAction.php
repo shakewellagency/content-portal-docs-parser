@@ -1,6 +1,6 @@
 <?php
 
-namespace Shakewellagency\ContentPortalDocsParser\Features\Packages\Actions\PDFPageParsers;
+namespace Shakewellagency\ContentPortalDocsParser\Features\Packages\Actions;
 
 use Illuminate\Support\Facades\Storage;
 use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\PackageInitializes\GetS3ParserFileTempAction;
