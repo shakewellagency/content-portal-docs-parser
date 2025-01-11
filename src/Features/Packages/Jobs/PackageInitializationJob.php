@@ -2,11 +2,6 @@
 
 namespace Shakewellagency\ContentPortalDocsParser\Features\Packages\Jobs;
 
-use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\FailedPackageAction;
-use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\PackageInitializes\GenerateHashAction;
-use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\PackageInitializes\GetS3ParserFileTempAction;
-use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\PackageInitializes\PDFPageCounterAction;
-use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\PackageInitializes\UnlinkTempFileAction;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
@@ -14,6 +9,10 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Shakewellagency\ContentPortalDocsParser\Features\Packages\Actions\ConvertDocstoPdfAction;
 use Shakewellagency\ContentPortalPdfParser\Events\ParsingStartedEvent;
+use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\FailedPackageAction;
+use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\PackageInitializes\GenerateHashAction;
+use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\PackageInitializes\PDFPageCounterAction;
+use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\PackageInitializes\UnlinkTempFileAction;
 use Throwable;
 
 class PackageInitializationJob implements ShouldQueue
@@ -24,7 +23,9 @@ class PackageInitializationJob implements ShouldQueue
     use SerializesModels;
 
     public int $timeout = 7200;
+
     protected $package;
+
     protected $version;
 
     /**
@@ -41,20 +42,20 @@ class PackageInitializationJob implements ShouldQueue
      */
     public function handle()
     {
-        //TODO: remove this
+        // TODO: remove this
         (new UnlinkTempFileAction)->execute();
-        //---- remove this
+        // ---- remove this
 
         event(new ParsingStartedEvent($this->package, $this->version));
-        
+
         $packageStatusEnum = config('shakewell-parser.enums.package_status_enum');
         $this->package->status = $packageStatusEnum::Processing->value;
         $this->package->save();
-       
+
         $this->package = (new GenerateHashAction)->execute($this->package);
-        
+
         $parserFile = (new ConvertDocstoPdfAction)->execute($this->package);
-        
+
         $totalPages = (new PDFPageCounterAction)->execute($parserFile);
         $this->package->total_pages = $totalPages;
         $this->package->save();
@@ -70,8 +71,8 @@ class PackageInitializationJob implements ShouldQueue
     public function failed(Throwable $exception)
     {
         (new FailedPackageAction)->execute(
-            $this->package, 
-            $this->version, 
+            $this->package,
+            $this->version,
             $exception
         );
     }

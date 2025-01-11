@@ -2,24 +2,22 @@
 
 namespace Shakewellagency\ContentPortalDocsParser\Features\Packages\Jobs;
 
-use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\PDFPageParsers\PageAssetDataIDAction;
-use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\PDFPageParsers\PDFPageParserAction;
-use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\PDFPageParsers\SetVersionCurrentAction;
-use Shakewellagency\ContentPortalPdfParser\Features\RenditionPages\Actions\CreateRenditionPageAction;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Shakewellagency\ContentPortalDocsParser\Features\Packages\Actions\ConvertDocstoPdfAction;
 use Shakewellagency\ContentPortalPdfParser\Events\ParsingFinishedEvent;
 use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\FailedPackageAction;
-use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\PackageInitializes\GetS3ParserFileTempAction;
+use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\PDFPageParsers\PageAssetDataIDAction;
+use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\PDFPageParsers\PDFPageParserAction;
+use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\PDFPageParsers\SetVersionCurrentAction;
+use Shakewellagency\ContentPortalPdfParser\Features\RenditionPages\Actions\CreateRenditionPageAction;
 use Throwable;
-use Illuminate\Support\Facades\Cache;
-use Shakewellagency\ContentPortalDocsParser\Features\Packages\Actions\ConvertDocstoPdfAction;
-use Shakewellagency\ContentPortalDocsParser\Features\Packages\Jobs\InitialPageParserJob;
 
 class BatchParserJob implements ShouldQueue
 {
@@ -31,11 +29,15 @@ class BatchParserJob implements ShouldQueue
     public int $timeout = 7200;
 
     protected $totalPage;
+
     protected $package;
+
     protected $pageRange;
+
     protected $cacheKey;
 
     protected $rendition;
+
     protected $version;
 
     /**
@@ -57,7 +59,7 @@ class BatchParserJob implements ShouldQueue
      */
     public function handle()
     {
-        
+
         if (Cache::get($this->cacheKey)) {
             return;
         }
@@ -69,7 +71,6 @@ class BatchParserJob implements ShouldQueue
             'rendition' => $this->rendition,
         ]);
         Log::info("Start Parsing Batch from: {$startPage} to: {$endPage}");
-
 
         $parserFile = (new ConvertDocstoPdfAction)->execute($this->package);
 
@@ -83,11 +84,10 @@ class BatchParserJob implements ShouldQueue
                 $this->package,
             );
 
-
             if ($page == 1) {
                 InitialPageParserJob::dispatch(
-                    $this->package, 
-                    $renditionPage, 
+                    $this->package,
+                    $renditionPage,
                     $this->rendition
                 );
             }
@@ -97,11 +97,10 @@ class BatchParserJob implements ShouldQueue
             Log::info("DONE Parsing Page {$page}");
         }
 
-
         $totalParsedPage = $this->rendition->renditionPages->where('is_parsed', 1)->count();
 
         if ($this->package->total_pages == $totalParsedPage) {
-            LoggerInfo("DONE Parsing All Pages", [
+            LoggerInfo('DONE Parsing All Pages', [
                 'package' => $this->package->toArray(),
                 'rendition' => $this->rendition,
             ]);
@@ -123,13 +122,13 @@ class BatchParserJob implements ShouldQueue
             'page_no' => $page,
             'rendition_id' => $this->rendition->id,
         ];
-        
+
         return (new CreateRenditionPageAction)->execute($parameter);
     }
 
     private function finisher()
     {
-        
+
         $packageStatusEnum = config('shakewell-parser.enums.package_status_enum');
         $this->package->finished_at = Carbon::now();
         $this->package->status = $packageStatusEnum::Finished->value;
@@ -157,8 +156,8 @@ class BatchParserJob implements ShouldQueue
         Cache::put($this->cacheKey, true, now()->addDay());
 
         (new FailedPackageAction)->execute(
-            $this->package, 
-            $this->version, 
+            $this->package,
+            $this->version,
             $exception
         );
 

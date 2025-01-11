@@ -3,15 +3,13 @@
 namespace Shakewellagency\ContentPortalDocsParser\Features\Packages\Actions;
 
 use Illuminate\Support\Facades\Storage;
-use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\PackageInitializes\GetS3ParserFileTempAction;
 use Imagick;
-use Shakewellagency\ContentPortalDocsParser\Features\Packages\Actions\ConvertDocstoPdfAction;
 
 class CoverPhotoAction
 {
     public function execute(
-        $renditionPage, 
-        $rendition, 
+        $renditionPage,
+        $rendition,
         $package
     ) {
 
@@ -21,11 +19,11 @@ class CoverPhotoAction
 
         $parserFile = (new ConvertDocstoPdfAction)->execute($package);
 
-        $tempHtmlPath = tempnam(sys_get_temp_dir(), "image_");
-        $imagePath = $tempHtmlPath . '.jpg';
+        $tempHtmlPath = tempnam(sys_get_temp_dir(), 'image_');
+        $imagePath = $tempHtmlPath.'.jpg';
         rename($tempHtmlPath, $imagePath);
 
-        $imagick = new Imagick();
+        $imagick = new Imagick;
         $imagick->setResolution(300, 300); // Set resolution for high-quality output
         $imagick->readImage($parserFile.'[0]'); // Read the first page of the PDF
         $imagick->setImageFormat('jpg');
@@ -39,7 +37,7 @@ class CoverPhotoAction
 
         $rendition->cover_photo_path = $s3FilePath;
         $rendition->save();
-        
+
         unlink($imagePath);
 
         return $rendition;

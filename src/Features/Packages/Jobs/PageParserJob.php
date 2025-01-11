@@ -2,18 +2,16 @@
 
 namespace Shakewellagency\ContentPortalDocsParser\Features\Packages\Jobs;
 
-use Shakewellagency\ContentPortalPdfParser\Features\Renditions\Actions\CreateRenditionAction;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
-use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\FailedPackageAction;
-use Throwable;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\FailedPackageAction;
+use Shakewellagency\ContentPortalPdfParser\Features\Renditions\Actions\CreateRenditionAction;
+use Throwable;
 
 class PageParserJob implements ShouldQueue
 {
@@ -23,8 +21,11 @@ class PageParserJob implements ShouldQueue
     use SerializesModels;
 
     public int $timeout = 7200;
+
     protected $package;
+
     protected $version;
+
     protected $rendition;
 
     /**
@@ -43,21 +44,21 @@ class PageParserJob implements ShouldQueue
     public function handle()
     {
         $this->rendition = $this->createRendition();
-        
+
         LoggerInfo('Successfully created rendition', [
             'package' => $this->package->toArray(),
             'rendition' => $this->rendition,
         ]);
 
         $totalPages = $this->package->total_pages;
-        
-        $cacheKey = 'job_chain_failure_flag-'. Str::random(10);
+
+        $cacheKey = 'job_chain_failure_flag-'.Str::random(10);
         Cache::forget($cacheKey);
 
-        $batchSize = 100; 
+        $batchSize = 100;
 
         for ($startPage = 1; $startPage <= $totalPages; $startPage += $batchSize) {
-            $endPage = min($startPage + $batchSize - 1, $totalPages); 
+            $endPage = min($startPage + $batchSize - 1, $totalPages);
             BatchParserJob::dispatch($this->package, $totalPages, [$startPage, $endPage], $cacheKey);
         }
     }
@@ -70,14 +71,15 @@ class PageParserJob implements ShouldQueue
             'type' => $this->package->file_type,
         ];
         $this->package->refresh();
+
         return (new CreateRenditionAction)->execute($parameter);
     }
 
     public function failed(Throwable $exception)
     {
         (new FailedPackageAction)->execute(
-            $this->package, 
-            $this->version, 
+            $this->package,
+            $this->version,
             $exception
         );
     }

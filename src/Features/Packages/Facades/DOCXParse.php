@@ -3,8 +3,8 @@
 namespace Shakewellagency\ContentPortalDocsParser\Features\Packages\Facades;
 
 use Shakewellagency\ContentPortalDocsParser\Features\Packages\Jobs\PackageInitializationJob;
-use Shakewellagency\ContentPortalPdfParser\Events\ParsingTriggerEvent;
 use Shakewellagency\ContentPortalDocsParser\Features\Packages\Jobs\PageParserJob;
+use Shakewellagency\ContentPortalPdfParser\Events\ParsingTriggerEvent;
 
 class DOCXParse
 {

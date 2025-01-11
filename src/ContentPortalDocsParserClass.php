@@ -2,6 +2,4 @@
 
 namespace Shakewellagency\ContentPortalDocsParser;
 
-class ContentPortalDocsParserClass
-{
-}
+class ContentPortalDocsParserClass {}

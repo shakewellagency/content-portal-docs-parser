@@ -2,7 +2,6 @@
 
 namespace Shakewellagency\ContentPortalDocsParser\Features\Packages\Actions;
 
-use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Support\Facades\Storage;
@@ -13,25 +12,25 @@ class ConvertDocstoPdfAction
     {
 
         $fileContent = Storage::disk(config('shakewell-parser.s3'))->get($package->file_path);
-        $currentTimestamp = now()->timestamp; 
+        $currentTimestamp = now()->timestamp;
 
         try {
             $pdfContent = Pdf::loadHTML($fileContent)->output();
-            $pdfPath = sys_get_temp_dir() . "/parser_file_{$package->hash}_{$currentTimestamp}.pdf";
+            $pdfPath = sys_get_temp_dir()."/parser_file_{$package->hash}_{$currentTimestamp}.pdf";
 
             if (! is_writable(sys_get_temp_dir())) {
-                throw new Exception("Temporary directory is not writable.");
+                throw new Exception('Temporary directory is not writable.');
             }
 
             $fileSaved = file_put_contents($pdfPath, $pdfContent);
-            
+
             if ($fileSaved === false) {
                 throw new Exception("Failed to save PDF file to: {$pdfPath}");
             }
 
             return $pdfPath;
         } catch (Exception $e) {
-            error_log("PDF conversion error: " . $e->getMessage());
+            error_log('PDF conversion error: '.$e->getMessage());
             throw $e;
         }
     }

@@ -2,13 +2,13 @@
 
 namespace Shakewellagency\ContentPortalDocsParser\Features\Packages\Jobs;
 
-use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\PDFPageParsers\OutlineParseAction;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Shakewellagency\ContentPortalDocsParser\Features\Packages\Actions\CoverPhotoAction;
+use Shakewellagency\ContentPortalPdfParser\Features\Packages\Actions\PDFPageParsers\OutlineParseAction;
 
 class InitialPageParserJob implements ShouldQueue
 {
@@ -18,12 +18,15 @@ class InitialPageParserJob implements ShouldQueue
     use SerializesModels;
 
     public int $timeout = 7200;
+
     protected $package;
+
     protected $renditionPage;
+
     protected $rendition;
 
     /**
-     * For Outline parsing and generating coverphoto for page 1 
+     * For Outline parsing and generating coverphoto for page 1
      */
     public function __construct($package, $renditionPage, $rendition)
     {
@@ -38,9 +41,9 @@ class InitialPageParserJob implements ShouldQueue
      */
     public function handle()
     {
-       $rendition = (new OutlineParseAction)->execute($this->renditionPage, $this->rendition);
-       (new CoverPhotoAction)->execute(
-            $this->renditionPage, 
+        $rendition = (new OutlineParseAction)->execute($this->renditionPage, $this->rendition);
+        (new CoverPhotoAction)->execute(
+            $this->renditionPage,
             $rendition,
             $this->package
         );
